@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>Gerador de Certificado | Guia de Portão Eletrônico</title>
+  <style>
+    :root { --navy:#111827; --gold:#c99b3b; --gold2:#9c7427; --line:#e5e7eb; --paper:#fffdf7; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:28px 16px 40px; min-height:100vh; background:#f1f5f9; color:#172033; font-family:Inter,Arial,Helvetica,sans-serif; }
+    .app { width:min(1180px,100%); margin:0 auto; }
+    header { margin:0 0 22px; }
+    h1 { margin:0 0 7px; font-size:clamp(24px,4vw,34px); letter-spacing:-.6px; }
+    header p { margin:0; color:#64748b; line-height:1.5; }
+    .layout { display:grid; grid-template-columns:320px minmax(0,1fr); gap:22px; align-items:start; }
+    .controls { padding:23px; background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 12px 35px rgba(15,23,42,.06); }
+    .controls h2 { margin:0 0 20px; font-size:18px; }
+    label { display:block; margin-bottom:8px; font-size:13px; font-weight:700; color:#334155; }
+    input { display:block; width:100%; min-height:48px; padding:12px 13px; border:1px solid #cbd5e1; border-radius:10px; background:white; color:#111827; font-size:16px; outline:none; }
+    input:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,155,59,.18); }
+    .help { margin:10px 0 18px; color:#64748b; font-size:12px; line-height:1.55; }
+    button { width:100%; min-height:47px; padding:12px 15px; border:0; border-radius:10px; background:var(--navy); color:#fff; font-size:14px; font-weight:750; cursor:pointer; transition:transform .15s,background .15s; }
+    button:hover { background:#263449; }
+    button:active { transform:scale(.99); }
+    button:focus-visible { outline:3px solid rgba(201,155,59,.5); outline-offset:2px; }
+    button.secondary { margin-top:10px; background:#eef2f7; color:#1e293b; }
+    button.secondary:hover { background:#e2e8f0; }
+    .status { min-height:18px; margin:13px 0 0; color:#15803d; font-size:12px; line-height:1.4; }
+    .preview-title { margin:0 0 10px; color:#64748b; font-size:11px; font-weight:800; letter-spacing:.13em; text-transform:uppercase; }
+    .certificate { position:relative; isolation:isolate; overflow:hidden; width:100%; aspect-ratio:1.414 / 1; min-height:480px; padding:clamp(32px,5vw,68px); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; background:var(--paper); color:#172033; border:1px solid #d7c18c; box-shadow:0 16px 45px rgba(15,23,42,.10); }
+    .certificate:before { content:""; position:absolute; inset:13px; border:2px solid var(--gold); pointer-events:none; z-index:-1; }
+    .certificate:after { content:""; position:absolute; inset:20px; border:1px solid #e4d5ad; pointer-events:none; z-index:-1; }
+    .ornament { position:absolute; width:66px; height:66px; border-color:var(--gold); opacity:.8; }
+    .tl { top:25px; left:25px; border-top:3px solid; border-left:3px solid; }
+    .tr { top:25px; right:25px; border-top:3px solid; border-right:3px solid; }
+    .bl { bottom:25px; left:25px; border-bottom:3px solid; border-left:3px solid; }
+    .br { bottom:25px; right:25px; border-bottom:3px solid; border-right:3px solid; }
+    .seal { width:54px; height:54px; margin-bottom:13px; display:grid; place-items:center; border:2px solid var(--gold); border-radius:50%; color:var(--gold2); font-size:25px; }
+    .eyebrow { color:var(--gold2); font-size:clamp(9px,1vw,12px); font-weight:800; letter-spacing:.25em; text-transform:uppercase; }
+    .cert-title { margin:12px 0 8px; color:#172033; font-family:Georgia,'Times New Roman',serif; font-size:clamp(30px,4.6vw,54px); font-weight:500; letter-spacing:.07em; }
+    .course { margin:0 0 19px; color:var(--gold2); font-family:Georgia,'Times New Roman',serif; font-size:clamp(14px,2vw,22px); font-weight:700; }
+    .statement { max-width:620px; margin:0; color:#596273; font-size:clamp(11px,1.25vw,15px); line-height:1.65; }
+    .student { width:min(84%,620px); min-height:43px; margin:15px 0 14px; padding:0 8px 8px; border-bottom:1px solid #b9964d; color:#172033; font-family:Georgia,'Times New Roman',serif; font-size:clamp(22px,3.4vw,39px); font-weight:700; overflow-wrap:anywhere; }
+    .student.placeholder { color:#a0a7b1; font-size:clamp(18px,2.5vw,28px); font-style:italic; font-weight:400; }
+    .meta { display:flex; justify-content:center; flex-wrap:wrap; gap:14px clamp(22px,5vw,68px); margin-top:23px; }
+    .meta-item { color:#647080; font-size:clamp(8px,.95vw,11px); letter-spacing:.08em; }
+    .meta-item strong { display:block; margin-top:6px; color:#1f2937; font-size:clamp(10px,1.1vw,13px); letter-spacing:.04em; }
+    .bottom-note { margin-top:25px; color:#9a8350; font-size:9px; font-weight:700; letter-spacing:.17em; text-transform:uppercase; }
+    @media (max-width:850px) { body { padding:20px 12px 30px; } .layout { grid-template-columns:1fr; } .controls { padding:19px; } .certificate { min-height:390px; } }
+    @media (max-width:520px) { .certificate { min-height:360px; padding:35px 25px; } .ornament { width:38px; height:38px; } .tl { top:22px; left:22px; } .tr { top:22px; right:22px; } .bl { bottom:22px; left:22px; } .br { bottom:22px; right:22px; } .seal { width:42px; height:42px; font-size:20px; margin-bottom:9px; } .course { margin-bottom:12px; } .student { margin:12px 0; } .meta { margin-top:16px; } .bottom-note { margin-top:16px; } }
+    @page { size:A4 landscape; margin:0; }
+    @media print {
+      html, body { width:297mm; height:210mm; margin:0 !important; padding:0 !important; background:#fff !important; }
+      body { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+      header, .controls, .preview-title { display:none !important; }
+      .app, .layout, .preview-wrap { display:block !important; width:297mm !important; height:210mm !important; margin:0 !important; padding:0 !important; }
+      .certificate { display:flex !important; width:297mm !important; height:210mm !important; min-height:0 !important; aspect-ratio:auto !important; margin:0 !important; padding:22mm 25mm !important; border:0 !important; box-shadow:none !important; page-break-inside:avoid; break-inside:avoid; }
+      .certificate:before { inset:10mm !important; } .certificate:after { inset:15mm !important; }
+      .ornament { width:18mm !important; height:18mm !important; }
+      .tl { top:18mm !important; left:18mm !important; } .tr { top:18mm !important; right:18mm !important; } .bl { bottom:18mm !important; left:18mm !important; } .br { bottom:18mm !important; right:18mm !important; }
+      .seal { width:16mm !important; height:16mm !important; font-size:22pt !important; }
+      .eyebrow { font-size:10pt !important; } .cert-title { font-size:36pt !important; } .course { font-size:17pt !important; } .statement { font-size:11pt !important; } .student { font-size:27pt !important; } .meta-item { font-size:8pt !important; } .meta-item strong { font-size:10pt !important; } .bottom-note { font-size:7pt !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header><h1>Gerador de certificado</h1><p>Guia de Portão Eletrônico do Zero · Preencha os dados e emita o certificado.</p></header>
+    <section class="layout">
+      <aside class="controls" aria-label="Dados do certificado">
+        <h2>Emitir certificado</h2>
+        <label for="studentName">Nome completo do aluno</label>
+        <input id="studentName" type="text" maxlength="100" placeholder="Ex.: João da Silva" autocomplete="name">
+        <p class="help">O nome será colocado no centro do certificado. A data é preenchida automaticamente e o código segue o padrão GPE-000001.</p>
+        <button id="generateBtn" type="button">Gerar certificado</button>
+        <button id="printBtn" class="secondary" type="button">Imprimir / Salvar em PDF</button>
+        <button id="clearBtn" class="secondary" type="button">Limpar campos</button>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </aside>
+      <section class="preview-wrap">
+        <p class="preview-title">Pré-visualização do certificado</p>
+        <article class="certificate" id="certificate" aria-label="Certificado de conclusão">
+          <span class="ornament tl"></span><span class="ornament tr"></span><span class="ornament bl"></span><span class="ornament br"></span>
+          <div class="seal" aria-hidden="true">★</div>
+          <div class="eyebrow">Certificado de conclusão</div>
+          <h2 class="cert-title">CERTIFICADO</h2>
+          <div class="course">Guia de Portão Eletrônico do Zero</div>
+          <p class="statement">Certificamos que</p>
+          <div class="student placeholder" id="certificateStudent">Nome do aluno</div>
+          <p class="statement">concluiu o treinamento <strong>Guia de Portão Eletrônico do Zero</strong>.</p>
+          <div class="meta">
+            <div class="meta-item">DATA DE EMISSÃO<strong id="certificateDate">--/--/----</strong></div>
+            <div class="meta-item">CÓDIGO DE CERTIFICAÇÃO<strong id="certificateCode">GPE-000001</strong></div>
+          </div>
+          <div class="bottom-note">Formação · Conhecimento · Prática</div>
+        </article>
+      </section>
+    </section>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const nameInput = $('studentName');
+      const studentOutput = $('certificateStudent');
+      const dateOutput = $('certificateDate');
+      const codeOutput = $('certificateCode');
+      const status = $('status');
+      let generatedName = '';
+      let generatedCode = '';
+      function formatToday() {
+        return new Intl.DateTimeFormat('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }).format(new Date());
+      }
+      function createCode() {
+        try {
+          const key = 'gpe_certificate_counter';
+          const current = Number.parseInt(localStorage.getItem(key) || '0', 10);
+          const next = (Number.isFinite(current) && current >= 0 ? current : 0) + 1;
+          localStorage.setItem(key, String(next));
+          return 'GPE-' + String(next).padStart(6, '0');
+        } catch (error) {
+          return 'GPE-' + String(Math.floor(100000 + Math.random() * 900000));
+        }
+      }
+      function generateCertificate() {
+        const name = nameInput.value.trim().replace(/\s+/g, ' ');
+        if (!name) {
+          status.textContent = 'Digite o nome do aluno antes de gerar.';
+          status.style.color = '#b45309';
+          nameInput.focus();
+          return false;
+        }
+        generatedName = name;
+        generatedCode = createCode();
+        studentOutput.textContent = name;
+        studentOutput.classList.remove('placeholder');
+        dateOutput.textContent = formatToday();
+        codeOutput.textContent = generatedCode;
+        status.textContent = 'Certificado gerado com sucesso.';
+        status.style.color = '#15803d';
+        return true;
+      }
+      $('generateBtn').addEventListener('click', generateCertificate);
+      $('printBtn').addEventListener('click', () => {
+        const currentName = nameInput.value.trim().replace(/\s+/g, ' ');
+        if (!currentName) {
+          status.textContent = 'Digite o nome do aluno antes de imprimir.';
+          status.style.color = '#b45309';
+          nameInput.focus();
+          return;
+        }
+        if (currentName !== generatedName || !generatedCode) {
+          if (!generateCertificate()) return;
+        }
+        dateOutput.textContent = formatToday();
+        window.print();
+      });
+      $('clearBtn').addEventListener('click', () => {
+        nameInput.value = '';
+        generatedName = '';
+        generatedCode = '';
+        studentOutput.textContent = 'Nome do aluno';
+        studentOutput.classList.add('placeholder');
+        dateOutput.textContent = formatToday();
+        codeOutput.textContent = 'GPE-000001';
+        status.textContent = '';
+        nameInput.focus();
+      });
+      dateOutput.textContent = formatToday();
+      nameInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') generateCertificate(); });
+    })();
+  </script>
+</body>
+</html>
